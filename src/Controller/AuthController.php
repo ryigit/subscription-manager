@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\ApiToken;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -11,13 +12,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AuthController extends AbstractController
 {
-    #[Route('/api/auth/login', name: 'auth.login')]
+    #[Route('/api/auth/login', name: 'auth.login', methods: ['POST'])]
     public function login(
         Request $request,
         UserPasswordHasherInterface $passwordHasher,
@@ -26,7 +26,7 @@ class AuthController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        $email = $data['username'];
+        $email = $data['email'];
         $password = $data['password'];
 
         $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
@@ -35,12 +35,13 @@ class AuthController extends AbstractController
             throw new BadCredentialsException('Invalid Email or Password');
         }
 
-        $token = new UsernamePasswordToken($user, null, $user->getRoles());
 
-        return new JsonResponse(['token' => $token->getAttribute('token')]);
+        $token = $user->getApiTokens()->first()->getToken();
+
+        return new JsonResponse(['token' => $token]);
     }
 
-    #[Route('/api/auth/register', name: 'auth.register')]
+    #[Route('/api/auth/register', name: 'auth.register', methods: ['POST'])]
     public function register(
         Request $request,
         UserPasswordHasherInterface $passwordHasher,
@@ -66,6 +67,13 @@ class AuthController extends AbstractController
         }
 
         $entityManager->persist($user);
+
+        //Create a token for the user.
+        $token = new ApiToken();
+        $token->setToken(bin2hex(random_bytes(32)));
+        $token->setOwnedBy($user);
+
+        $entityManager->persist($token);
 
         $entityManager->flush();
 
