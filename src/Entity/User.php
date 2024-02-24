@@ -38,9 +38,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: ApiToken::class, mappedBy: 'ownedBy')]
     private Collection $apiTokens;
 
+    #[ORM\OneToMany(targetEntity: UserSubscription::class, mappedBy: 'user')]
+    private Collection $userSubscriptions;
+
     public function __construct()
     {
         $this->apiTokens = new ArrayCollection();
+        $this->userSubscriptions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -154,6 +158,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($apiToken->getOwnedBy() === $this) {
                 $apiToken->setOwnedBy(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getUserSubscriptions(): Collection
+    {
+        return $this->userSubscriptions;
+    }
+
+    public function addUserSubscription(UserSubscription $userSubscription): static
+    {
+        if (!$this->userSubscriptions->contains($userSubscription)) {
+            $this->userSubscriptions->add($userSubscription);
+            $userSubscription->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserSubscription(UserSubscription $userSubscription): static
+    {
+        if ($this->userSubscriptions->removeElement($userSubscription)) {
+            // set the owning side to null (unless already changed)
+            if ($userSubscription->getUser() === $this) {
+                $userSubscription->setUser(null);
             }
         }
 

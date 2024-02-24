@@ -14,11 +14,12 @@ class UserSubscription
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
-    private ?int $user_id = null;
+    #[ORM\ManyToOne(inversedBy: 'userSubscriptions')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $user = null;
 
-    #[ORM\Column]
-    private ?int $subscription_id = null;
+    #[ORM\OneToOne]
+    private ?Subscription $subscription = null;
 
     #[ORM\Column(length: 255)]
     private ?string $status = null;
@@ -34,26 +35,26 @@ class UserSubscription
         return $this->id;
     }
 
-    public function getUserId(): ?int
+    public function getUser(): User
     {
-        return $this->user_id;
+        return $this->user;
     }
 
-    public function setUserId(int $user_id): static
+    public function setUser(User $user): static
     {
-        $this->user_id = $user_id;
+        $this->user = $user;
 
         return $this;
     }
 
-    public function getSubscriptionId(): ?int
+    public function getSubscription(): Subscription
     {
-        return $this->subscription_id;
+        return $this->subscription;
     }
 
-    public function setSubscriptionId(int $subscription_id): static
+    public function setSubscription(Subscription $subscription): static
     {
-        $this->subscription_id = $subscription_id;
+        $this->subscription = $subscription;
 
         return $this;
     }

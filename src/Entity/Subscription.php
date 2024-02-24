@@ -4,9 +4,10 @@ namespace App\Entity;
 
 use App\Repository\SubscriptionRepository;
 use Doctrine\ORM\Mapping as ORM;
+use JsonSerializable;
 
 #[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
-class Subscription
+class Subscription implements JsonSerializable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -83,5 +84,16 @@ class Subscription
         $this->duration = $duration;
 
         return $this;
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'description' => $this->description,
+            'price' => $this->price,
+            'duration' => $this->duration,
+        ];
     }
 }
