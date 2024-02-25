@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\Subscription;
 use App\Entity\User;
-use App\Entity\UserSubscription;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -45,15 +44,9 @@ class SubscriptionController extends AbstractController
 
         /** @var User $user */
         $user = $this->getUser();
+        $user->addSubscriptionToUser($subscription);
 
-        $userSubscription = new UserSubscription();
-        $userSubscription->setUser($user);
-        $userSubscription->setSubscription($subscription);
-        $userSubscription->setStatus('active');
-        $userSubscription->setStartDate(date_create('today'));
-        $userSubscription->setEndDate(date_create('+30 days'));
-
-        $entityManager->persist($userSubscription);
+        $entityManager->persist($user);
 
         $entityManager->flush();
 
@@ -63,24 +56,28 @@ class SubscriptionController extends AbstractController
     #[Route('/api/subscriptions/{id}/unsubscribe', name: 'subscriptions.unsubscribe', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function unSubscribeToItem(int $id, EntityManagerInterface $entityManager): Response
     {
-        $userSubscription = $entityManager->getRepository(UserSubscription::class)->find($id);
+        $subscription = $entityManager->getRepository(Subscription::class)->find($id);
 
-        if(!$userSubscription) {
+        if(!$subscription) {
             throw $this->createNotFoundException('The User Subscription Does Does Not Exist');
         }
 
-        $entityManager->remove($userSubscription);
+        /** @var User $user */
+        $user = $this->getUser();
+        $user->removeSubscriptionFromUser($subscription);
+
+        $entityManager->persist($user);
         $entityManager->flush();
 
         return new Response('Unsubscribed', Response::HTTP_NO_CONTENT);
     }
 
-    #[Route('/api/subscriptions/me', name: 'subscriptions.unsubscribe', requirements: ['id' => '\d+'], methods: ['GET'])]
+    #[Route('/api/subscriptions/me', name: 'subscriptions.me', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function userSubscriptions(EntityManagerInterface $entityManager): Response
     {
         /** @var User $user */
         $user = $this->getUser();
 
-        return new JsonResponse($user->getUserSubscriptions());
+        return new JsonResponse($user->getSubscriptions()->toArray());
     }
 }

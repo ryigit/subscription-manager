@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\SubscriptionRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JsonSerializable;
 
@@ -26,6 +28,14 @@ class Subscription implements JsonSerializable
     #[ORM\Column]
     private ?int $duration = null;
 
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'subscriptions')]
+    #[ORM\JoinTable(name: 'user_subscription')]
+    private Collection $users;
+
+    public function __construct()
+    {
+        $this->users = new ArrayCollection();
+    }
     public function getId(): ?int
     {
         return $this->id;
@@ -84,6 +94,11 @@ class Subscription implements JsonSerializable
         $this->duration = $duration;
 
         return $this;
+    }
+
+    public function getUsers(): Collection
+    {
+        return $this->users;
     }
 
     public function jsonSerialize(): array

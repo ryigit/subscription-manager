@@ -30,7 +30,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private array $roles = [];
 
     /**
-     * @var string The hashed password
+     * @var ?string The hashed password
      */
     #[ORM\Column]
     private ?string $password = null;
@@ -38,13 +38,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: ApiToken::class, mappedBy: 'ownedBy')]
     private Collection $apiTokens;
 
-    #[ORM\OneToMany(targetEntity: UserSubscription::class, mappedBy: 'user')]
-    private Collection $userSubscriptions;
+    #[ORM\ManyToMany(targetEntity: Subscription::class)]
+    #[ORM\JoinTable(name: 'user_subscription')]
+    private Collection $subscriptions;
 
     public function __construct()
     {
         $this->apiTokens = new ArrayCollection();
-        $this->userSubscriptions = new ArrayCollection();
+        $this->subscriptions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -155,7 +156,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeApiToken(ApiToken $apiToken): static
     {
         if ($this->apiTokens->removeElement($apiToken)) {
-            // set the owning side to null (unless already changed)
             if ($apiToken->getOwnedBy() === $this) {
                 $apiToken->setOwnedBy(null);
             }
@@ -164,30 +164,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getUserSubscriptions(): Collection
+    public function getSubscriptions(): Collection
     {
-        return $this->userSubscriptions;
+        return $this->subscriptions;
     }
 
-    public function addUserSubscription(UserSubscription $userSubscription): static
+    public function addSubscriptionToUser(Subscription $subscription): Subscription
     {
-        if (!$this->userSubscriptions->contains($userSubscription)) {
-            $this->userSubscriptions->add($userSubscription);
-            $userSubscription->setUser($this);
+        if($this->subscriptions->contains($subscription)){
+            return $subscription;
         }
 
-        return $this;
+        return $this->subscriptions[] = $subscription;
     }
 
-    public function removeUserSubscription(UserSubscription $userSubscription): static
+    public function removeSubscriptionFromUser(Subscription $subscription): bool
     {
-        if ($this->userSubscriptions->removeElement($userSubscription)) {
-            // set the owning side to null (unless already changed)
-            if ($userSubscription->getUser() === $this) {
-                $userSubscription->setUser(null);
-            }
-        }
-
-        return $this;
+        return $this->subscriptions->removeElement($subscription);
     }
 }
