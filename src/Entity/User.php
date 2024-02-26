@@ -38,14 +38,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: ApiToken::class, mappedBy: 'ownedBy')]
     private Collection $apiTokens;
 
-    #[ORM\ManyToMany(targetEntity: Subscription::class)]
-    #[ORM\JoinTable(name: 'user_subscription')]
-    private Collection $subscriptions;
+    #[ORM\OneToMany(targetEntity: UserSubscription::class, mappedBy: 'user')]
+    private Collection $userSubscriptions;
 
     public function __construct()
     {
         $this->apiTokens = new ArrayCollection();
-        $this->subscriptions = new ArrayCollection();
+        $this->userSubscriptions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -164,22 +163,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getSubscriptions(): Collection
+    public function getUserSubscriptions(): Collection
     {
-        return $this->subscriptions;
+        return $this->userSubscriptions;
     }
 
-    public function addSubscriptionToUser(Subscription $subscription): Subscription
+    public function addUserSubscription(UserSubscription $userSubscription): self
     {
-        if($this->subscriptions->contains($subscription)){
-            return $subscription;
+        if($this->userSubscriptions->contains($userSubscription)){
+            $this->userSubscriptions[] = $userSubscription;
+            $userSubscription->setUser($this);
         }
 
-        return $this->subscriptions[] = $subscription;
+        return $this;
     }
 
-    public function removeSubscriptionFromUser(Subscription $subscription): bool
+    public function removeUserSubscription(UserSubscription $userSubscription): self
     {
-        return $this->subscriptions->removeElement($subscription);
+        if ($this->userSubscriptions->removeElement($userSubscription)) {
+            // set the owning side to null (unless already changed)
+            if ($userSubscription->getUser() === $this) {
+                $userSubscription->setUser(null);
+            }
+        }
+        return $this;
     }
 }

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Subscription;
 use App\Entity\User;
+use App\Entity\UserSubscription;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -44,9 +45,17 @@ class SubscriptionController extends AbstractController
 
         /** @var User $user */
         $user = $this->getUser();
-        $user->addSubscriptionToUser($subscription);
 
-        $entityManager->persist($user);
+        $userSubscription = new UserSubscription();
+        $userSubscription->setUser($user);
+        $userSubscription->setSubscription($subscription);
+        $userSubscription->setStatus('active');
+        $userSubscription->setStartDate(date_create('today'));
+        $userSubscription->setEndDate(date_create('+30 days'));
+
+        $entityManager->persist($userSubscription);
+
+        //$entityManager->persist($user);
 
         $entityManager->flush();
 
@@ -56,15 +65,15 @@ class SubscriptionController extends AbstractController
     #[Route('/api/subscriptions/{id}/unsubscribe', name: 'subscriptions.unsubscribe', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function unSubscribeToItem(int $id, EntityManagerInterface $entityManager): Response
     {
-        $subscription = $entityManager->getRepository(Subscription::class)->find($id);
+        $userSubscription = $entityManager->getRepository(UserSubscription::class)->find($id);
 
-        if(!$subscription) {
+        if(!$userSubscription) {
             throw $this->createNotFoundException('The User Subscription Does Does Not Exist');
         }
 
         /** @var User $user */
         $user = $this->getUser();
-        $user->removeSubscriptionFromUser($subscription);
+        $user->removeUserSubscription($userSubscription);
 
         $entityManager->persist($user);
         $entityManager->flush();
@@ -78,6 +87,6 @@ class SubscriptionController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        return new JsonResponse($user->getSubscriptions()->toArray());
+        return new JsonResponse($user->getUserSubscriptions()->toArray());
     }
 }
