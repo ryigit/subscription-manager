@@ -9,9 +9,11 @@ use Doctrine\ORM\EntityManagerInterface;
 use Nelmio\ApiDocBundle\Annotation\Security;
 use OpenApi\Attributes as OA;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 class SubscriptionController extends AbstractController
@@ -57,9 +59,8 @@ class SubscriptionController extends AbstractController
     )]
     #[Security(name: 'Bearer')]
     #[Route('/api/subscriptions/{id}/subscribe', name: 'subscriptions.subscribe', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function subscribeToItem(int $id, EntityManagerInterface $entityManager): Response
+    public function subscribeToItem(int $id, EntityManagerInterface $entityManager, LoggerInterface $logger): Response
     {
-        //ToDo: What if user already have an active subscription?
         $subscription = $entityManager->getRepository(Subscription::class)->find($id);
 
         if(!$subscription) {
@@ -69,6 +70,18 @@ class SubscriptionController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
+        $logger->info('User ' . $user->getId() . ' will subscribe to Subscription ' . $subscription->getId());
+
+        $existingUserSubscription = $entityManager->getRepository(UserSubscription::class)->findBy([
+            'user' => $user,
+            'subscription' => $subscription,
+            'status' => 'active'
+        ]);
+
+        if($existingUserSubscription) {
+            throw new BadRequestHttpException('User is already subscribed to this Subscription');
+        }
+
         $userSubscription = new UserSubscription();
         $userSubscription->setUser($user);
         $userSubscription->setSubscription($subscription);
@@ -77,8 +90,6 @@ class SubscriptionController extends AbstractController
         $userSubscription->setEndDate(date_create('+30 days'));
 
         $entityManager->persist($userSubscription);
-
-        //$entityManager->persist($user);
 
         $entityManager->flush();
 
@@ -108,6 +119,8 @@ class SubscriptionController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         $user->removeUserSubscription($userSubscription);
+        //Might find a better way.
+        $entityManager->remove($userSubscription);
 
         $entityManager->persist($user);
         $entityManager->flush();
@@ -126,6 +139,6 @@ class SubscriptionController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        return new JsonResponse($user->getUserSubscriptions()->toArray());
+        return new JsonResponse(['user_subscriptions' => $user->getUserSubscriptions()->toArray()]);
     }
 }

@@ -100,8 +100,8 @@ class UserSubscription implements JsonSerializable
     {
         return [
             'id' => $this->id,
-            'user_id' => $this->user->getId(),
-            'subscription_id' => $this->subscription->getId(),
+            'subscription_name' => $this->subscription->getName(),
+            'subscription_description' => $this->subscription->getDescription(),
             'status' => $this->status,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date

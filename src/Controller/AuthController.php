@@ -5,10 +5,8 @@ namespace App\Controller;
 use App\Entity\ApiToken;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
-use Nelmio\ApiDocBundle\Annotation\Security;
 use OpenApi\Attributes as OA;
 
-use phpDocumentor\Reflection\PseudoTypes\StringValue;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

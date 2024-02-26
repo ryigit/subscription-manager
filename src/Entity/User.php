@@ -180,12 +180,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function removeUserSubscription(UserSubscription $userSubscription): self
     {
-        if ($this->userSubscriptions->removeElement($userSubscription)) {
+        $this->userSubscriptions->removeElement($userSubscription);
+
+        /*if ($this->userSubscriptions->removeElement($userSubscription)) {
             // set the owning side to null (unless already changed)
             if ($userSubscription->getUser() === $this) {
                 $userSubscription->setUser(null);
             }
-        }
+        }*/
+
         return $this;
     }
 }
