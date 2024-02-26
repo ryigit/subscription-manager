@@ -6,6 +6,9 @@ use App\Entity\Subscription;
 use App\Entity\User;
 use App\Entity\UserSubscription;
 use Doctrine\ORM\EntityManagerInterface;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Attributes as OA;
+
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,6 +16,10 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class SubscriptionController extends AbstractController
 {
+    #[OA\Response(
+        response: 200,
+        description: 'Returns a list of all subscriptions',
+    )]
     #[Route('/api/subscriptions', name: 'subscriptions.all', methods: ['GET'])]
     public function getSubscriptions(EntityManagerInterface $entityManager): JsonResponse
     {
@@ -21,6 +28,11 @@ class SubscriptionController extends AbstractController
         return new JsonResponse(['subscriptions' => $subscriptions]);
     }
 
+    #[OA\Response(
+        response: 200,
+        description: 'Returns subscription with the given ID.',
+    )]
+    #[Security(name: 'Bearer')]
     #[Route('/api/subscriptions/{id}', name: 'subscriptions.get', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function getSubscription(int $id, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -33,6 +45,17 @@ class SubscriptionController extends AbstractController
         return new JsonResponse($subscription);
     }
 
+    #[OA\Response(
+        response: 200,
+        description: 'Subscribes to item with given Id for the active user',
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'Subscription ID',
+        in: 'query',
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[Security(name: 'Bearer')]
     #[Route('/api/subscriptions/{id}/subscribe', name: 'subscriptions.subscribe', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function subscribeToItem(int $id, EntityManagerInterface $entityManager): Response
     {
@@ -62,6 +85,17 @@ class SubscriptionController extends AbstractController
         return new Response('Subscribed Successfully', Response::HTTP_CREATED);
     }
 
+    #[OA\Response(
+        response: 200,
+        description: 'UnSubscribes from the item with given id for the active user',
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'Subscription ID',
+        in: 'query',
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[Security(name: 'Bearer')]
     #[Route('/api/subscriptions/{id}/unsubscribe', name: 'subscriptions.unsubscribe', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function unSubscribeToItem(int $id, EntityManagerInterface $entityManager): Response
     {
@@ -81,6 +115,11 @@ class SubscriptionController extends AbstractController
         return new Response('Unsubscribed', Response::HTTP_NO_CONTENT);
     }
 
+    #[OA\Response(
+        response: 200,
+        description: 'Returns active subscriptions of the active user',
+    )]
+    #[Security(name: 'Bearer')]
     #[Route('/api/subscriptions/me', name: 'subscriptions.me', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function userSubscriptions(EntityManagerInterface $entityManager): Response
     {

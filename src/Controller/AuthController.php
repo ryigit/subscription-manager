@@ -5,8 +5,11 @@ namespace App\Controller;
 use App\Entity\ApiToken;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Attributes as OA;
 
+use phpDocumentor\Reflection\PseudoTypes\StringValue;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,6 +20,22 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AuthController extends AbstractController
 {
+    #[OA\Response(
+        response: 200,
+        description: 'Returns User Token',
+    )]
+    #[OA\Parameter(
+        name: 'email',
+        description: 'Email address',
+        in: 'query',
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'password',
+        description: 'Password',
+        in: 'query',
+        schema: new OA\Schema(type: 'string')
+    )]
     #[Route('/api/auth/login', name: 'auth.login', methods: ['POST'])]
     public function login(
         Request $request,
@@ -41,6 +60,28 @@ class AuthController extends AbstractController
         return new JsonResponse(['token' => $token]);
     }
 
+    #[OA\Response(
+        response: 200,
+        description: 'Returns success message',
+    )]
+    #[OA\Parameter(
+        name: 'username',
+        description: 'Name of the user',
+        in: 'query',
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'email',
+        description: 'Email address',
+        in: 'query',
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'password',
+        description: 'Password',
+        in: 'query',
+        schema: new OA\Schema(type: 'string')
+    )]
     #[Route('/api/auth/register', name: 'auth.register', methods: ['POST'])]
     public function register(
         Request $request,
