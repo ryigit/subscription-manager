@@ -27,3 +27,10 @@ Subscription Manager Application.
 Further Details can be found in:
 
 - `/api/doc`:
+
+## Running Application:
+
+1. Install dependencies: `composer install`
+2. Run migrations: `php bin/console doctrine:migrations:migrate`
+3. Run fixtures to load testing data: `php bin/console doctrine:fixtures:load`
+4. Start symfony server: `symfony server:start`
